@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente Contable MAST — Arquitectura</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#2d3742;
+    --txt:#e6edf3; --dim:#8b949e; --acc:#4da3ff; --ok:#3fb950; --warn:#d29922; --bad:#f85149;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:32px 24px 80px;max-width:1180px;margin:0 auto}
+  h1{font-size:26px;font-weight:650;letter-spacing:-.02em}
+  h2{font-size:19px;font-weight:620;margin:44px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h3{font-size:15px;font-weight:620;margin:20px 0 8px;color:var(--acc)}
+  p{margin:8px 0;color:#c9d1d9}
+  .sub{color:var(--dim);font-size:13.5px;margin-top:6px}
+  .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:10px 0}
+  .grid{display:grid;gap:10px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:860px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+  details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0;overflow:hidden}
+  details[open]{background:var(--panel2)}
+  summary{cursor:pointer;padding:13px 16px;font-weight:600;font-size:14.5px;list-style:none;display:flex;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸";color:var(--acc);font-size:12px;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  .body{padding:0 16px 16px 38px;font-size:14px}
+
+  .tag{font:600 10.5px/1 var(--mono);padding:4px 7px;border-radius:5px;letter-spacing:.06em;text-transform:uppercase}
+  .t-d{background:#1f3a5f;color:#79c0ff}
+  .t-s{background:#3d2a1a;color:#d29922}
+  .t-x{background:#1a3d24;color:#56d364}
+  .t-r{background:#3d1f24;color:#ff7b72}
+  .t-g{background:#21262d;color:#8b949e}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--dim);font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+  td{padding:9px 10px;border-bottom:1px solid #21262d;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  code{font:12.5px var(--mono);background:#21262d;padding:2px 5px;border-radius:4px;color:#a5d6ff}
+
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;font:12.5px var(--mono)}
+  .box{background:#1f3a5f;border:1px solid #2f5a8a;color:#a5d6ff;padding:7px 11px;border-radius:6px}
+  .box.alt{background:#1a3d24;border-color:#2f6b3a;color:#7ee787}
+  .box.stop{background:#3d1f24;border-color:#7a2e2e;color:#ff9b95}
+  .arrow{color:var(--dim)}
+
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+  .kpi b{display:block;font:650 22px/1.1 var(--mono);color:var(--acc);margin-bottom:3px}
+  .kpi span{font-size:12px;color:var(--dim);line-height:1.4;display:block}
+
+  .warn{background:#2a2116;border-left:3px solid var(--warn);padding:11px 14px;border-radius:0 7px 7px 0;margin:12px 0;font-size:13.5px}
+  .bad{background:#2a1719;border-left:3px solid var(--bad);padding:11px 14px;border-radius:0 7px 7px 0;margin:12px 0;font-size:13.5px}
+  .ok{background:#16251b;border-left:3px solid var(--ok);padding:11px 14px;border-radius:0 7px 7px 0;margin:12px 0;font-size:13.5px}
+  ul{margin:8px 0 8px 20px} li{margin:5px 0;color:#c9d1d9}
+  .src{font:11.5px var(--mono);color:#6e7681;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Electivo IV · IA Agéntica · FAE USACH · clase de contabilidad agéntica</div>
+<h1>Agente Contable MAST</h1>
+<p class="sub">Automatización de tareas de José · MAST Arquitectura y Construcción · ERP Kame + Excel maestro BTPR 009-011</p>
+
+<div class="grid g4" style="margin:22px 0">
+  <div class="kpi"><b>7</b><span>subsistemas del harness, todos con posición explícita</span></div>
+  <div class="kpi"><b>5.600+</b><span>fórmulas en el Excel origen — fuente medida</span></div>
+  <div class="kpi"><b>34.795</b><span>caracteres del protocolo, ya extraídos</span></div>
+  <div class="kpi"><b>4</b><span>dominios de RAG, ningún índice colapsado</span></div>
+</div>
+
+<h2>1 · El problema, en una línea</h2>
+<div class="card">
+  <p>José controla ventas, subcontratos, gastos y flujo de caja de MAST en un Excel maestro de
+  <strong>5.600+ fórmulas</strong>, mientras el protocolo de la empresa dice (pág. 13) que
+  <em>"la información de la compañía se sustenta en KAME ERP"</em>.</p>
+  <p style="margin-top:10px">Hay dos orígenes para el mismo número. El agente no viene a calcular mejor
+  que el Excel: viene a <strong>decidir con qué fuente se responde, y a rechazar lo que no cuadra</strong>
+  diciendo qué regla lo frenó.</p>
+</div>
+
+<div class="bad"><strong>Lo que se midió en el Excel, no lo que se supone:</strong> 26 filas con estado
+<code>Eliminado</code> y 8 <code>Anulada</code> dentro de las ventas; 3 de 6 filas
+<code>Factura Exenta</code> con ratio bruto/neto de 1,19 (se les aplicó IVA); ratios de 900x y
+48.514x entre bruto y neto; y <strong>14 filas con un neto de decenas de pesos que generan un pago
+bruto en millones</strong>. Sumadas, inflan el flujo de caja.</div>
+
+<h2>2 · Las 14 filas rotas son el hallazgo caro</h2>
+<div class="card">
+  <p>La columna <code>Pago Bruto</code> es la que alimenta el flujo de caja. En 14 filas está desacoplada
+  de su base: el <code>TOTAL NETO</code> dice una cifra de dos o tres dígitos y el <code>Pago Bruto</code>
+  dice millones.</p>
+  <table>
+    <tr><th>Fila</th><th>TOTAL NETO</th><th>Pago Neto / Bruto</th></tr>
+    <tr><td>R133</td><td>decenas de pesos</td><td>millones</td></tr>
+    <tr><td>R13</td><td>cientos de pesos</td><td>millones</td></tr>
+    <tr><td>R50</td><td>cientos de pesos</td><td>millones</td></tr>
+  </table>
+  <p style="margin-top:10px">Un agente que suma sin validar arrastra ese error a la proyección de caja.
+  <strong>El control de cuadratura <code>bruto = neto × % × 1,19</code> es lo que lo detiene.</strong> No es un
+  detalle de estilo: es la razón de existir del agente.</p>
+</div>
+
+<h2>3 · Los 7 subsistemas — posición concreta para MAST</h2>
+<p class="sub">Marco: <em>Harness Engineering</em> (arXiv 2609.00006v1). Cada subsistema tiene posición, incluso cuando la posición es ausencia deliberada. Clíc para abrir.</p>
+
+<details open>
+  <summary><span class="tag t-d">D1</span> Agent loop — el bucle</summary>
+  <div class="body">
+    <p><strong>Un <code>while</code> lineal. Sin framework.</strong> El bucle es pensar → actuar → observar, con condiciones de parada explícitas.</p>
+    <div class="flow">
+      <span class="box">pensar</span><span class="arrow">→</span>
+      <span class="box">actuar (tool)</span><span class="arrow">→</span>
+      <span class="box">observar</span><span class="arrow">→</span>
+      <span class="box alt">¿tarea lista?</span><span class="arrow">no ↓</span>
+      <span class="box stop">parar si: 15 pasos / costo / repetitivo</span>
+    </div>
+    <p><strong>Condiciones de parada para un agente contable</strong> (más estrictas que en código):</p>
+    <ul>
+      <li>Máximo 15 pasos por tarea — una conciliación que necesita más pasos está mal planteada.</li>
+      <li><strong>Detector de repetitivo</strong> (patrón <em>Stuck Detection</em>): si las últimas 3 acciones son iguales, para y pregunta.</li>
+      <li><strong>Parada dura por cifra no cuadrada</strong>: si un control (activo = pasivo + patrimonio, o neto × 1,19 = bruto) no cuadra, el agente <em>no sigue</em>. Devuelve el error.</li>
+    </ul>
+    <div class="src">Fuente: harness-engineering-agentes §2, recomendación 1 ("empieza con un while lineal").</div>
+  </div>
+</details>
+
+<details>
+  <summary><span class="tag t-d">D2</span> Integración LLM</summary>
+  <div class="body">
+    <p>Un solo proveedor con fallback. Por disciplina de costo: <code>deepseek-v4-flash</code> para el trabajo cotidiano,
+    modelo de razonamiento solo puntual. La extracción de cifras <strong>no pasa por el LLM</strong> — es Python determinista
+    (<code>pymupdf</code> / <code>openpyxl</code>). El LLM solo redacta y decide a qué herramienta llamar.</p>
+    <div class="ok"><strong>La regla que evita el desastre:</strong> el LLM nunca produce un número. Los números salen de una
+    herramienta y viajan con su fuente. Si el modelo escribe "$4.301.356" sin que una herramienta lo haya devuelto, es alucinación
+    por definición.</div>
+  </div>
+</details>
+
+<details>
+  <summary><span class="tag t-d">D3</span> Herramientas y acciones</summary>
+  <div class="body">
+    <p><strong>Pocas herramientas, todas tipadas.</strong> Bajo ~15 no se necesita carga diferida.</p>
+    <table>
+      <tr><th>Herramienta</th><th>Qué hace</th><th>Determinista</th></tr>
+      <tr><td><code>leer_excel_master</code></td><td>Abre una hoja, devuelve filas con su número de fila real</td><td>Sí</td></tr>
+      <tr><td><code>consultar_kame</code></td><td>Puente a la API/exportación del ERP — <strong>fuente de verdad</strong></td><td>Sí</td></tr>
+      <tr><td><code>conciliar</code></td><td>Cruza Kame vs Excel por (RUT, folio, monto, fecha)</td><td>Sí</td></tr>
+      <tr><td><code>validar_regla</code></td><td>Evalúa una regla del protocolo sobre un registro</td><td>Sí</td></tr>
+      <tr><td><code>verificar_norma</code></td><td>Consulta el RAG y devuelve el fragmento + cita</td><td>No (recupera)</td></tr>
+      <tr><td><code>proponer_asiento</code></td><td>Arma el documento para que un humano lo firme</td><td>Sí</td></tr>
+    </table>
+    <div class="warn"><strong>No hay herramienta de escritura al ERP en esta fase.</strong> El agente propone, el humano firma.
+    Escribir en Kame es efecto externo irreversible — se pide permiso o no se hace.</div>
+  </div>
+</details>
+
+<details>
+  <summary><span class="tag t-d">D4</span> Memoria y contexto</summary>
+  <div class="body">
+    <p>Tres capas, y la distinción importa porque en auditoría la trazabilidad no es un detalle técnico:</p>
+    <ul>
+      <li><strong>Contexto de trabajo</strong>: el archivo de reglas del protocolo, cargado al inicio. Se compacta por umbral
+      preservando la cola reciente verbatim, y <strong>fusionando</strong> resúmenes en vez de re-resumir desde cero.</li>
+      <li><strong>Memoria del proyecto</strong>: hechos estables (que MAST usa Kame, los estados válidos, el anticipo del 30%).
+      No se compacta, se versiona.</li>
+      <li><strong>Historial auditable</strong>: cada respuesta con la fila del Excel y el artículo de la norma que la sustentan.
+      Es lo que un auditor revisa, no la conversación.</li>
+    </ul>
+    <div class="src">Fuente: recomendaciones 6 y 7 del harness (compactación por umbral, fusión incremental).</div>
+  </div>
+</details>
+
+<details open>
+  <summary><span class="tag t-s">D5</span> Seguridad y permisos — donde se firma</summary>
+  <div class="body">
+    <p>Un error contable se firma y tiene consecuencia legal. El subsistema de seguridad no es opcional acá.</p>
+    <div class="grid g3">
+      <div class="card" style="margin:0"><span class="tag t-x">PLAN</span><p style="margin-top:8px;font-size:13.5px">Solo lee y propone. <strong>Es el modo por defecto.</strong></p></div>
+      <div class="card" style="margin:0"><span class="tag t-s">DEFAULT</span><p style="margin-top:8px;font-size:13.5px">Ejecuta herramientas deterministas. Pide permiso para escribir fuera.</p></div>
+      <div class="card" style="margin:0"><span class="tag t-r">PROHIBIDO</span><p style="margin-top:8px;font-size:13.5px">Nunca: emitir factura, firmar, pagar, modificar el ERP, declarar al SII.</p></div>
+    </div>
+    <p style="margin-top:14px"><strong>Tres reglas duras, codificadas como política y no como código imperativo:</strong></p>
+    <ul>
+      <li><strong>Ningún número sin fuente.</strong> Cada cifra lleva fila+hoja del Excel, o folio del ERP, o artículo de ley.</li>
+      <li><strong>Dato del contribuyente es privado.</strong> RUT, montos y flujo no salen del entorno sin autorización.</li>
+      <li><strong>Contenido externo es no confiable.</strong> Un PDF o un Excel de terceros se marca y no puede reescribir las reglas
+      (<em>Untrusted-Content Delimiting</em>).</li>
+    </ul>
+    <div class="warn" style="margin-top:14px"><strong>El master se llena a mano.</strong> Eso cambia qué hay que proteger.
+    El motor de cálculo de Excel no es el riesgo — la digitación sí. Las 14 filas rotas, los ratios de 900x y las
+    exentas con IVA no son errores de fórmula: son celdas escritas mal. Por eso el agente <strong>valida antes de sumar</strong>
+    y su trabajo principal no es calcular mejor, sino <strong>rechazar lo que no puede ser cierto</strong> y devolver la fila exacta
+    para que José la corrija.</div>
+  </div>
+</details>
+
+<details>
+  <summary><span class="tag t-g">D6</span> Orquestación — ausencia deliberada</summary>
+  <div class="body">
+    <p><strong>Single-agent por ahora.</strong> Los sistemas multi-agente usan ~15× más tokens. No hay todavía una fase de
+    exploración en anchura que justifique el costo.</p>
+    <p>Si aparece: el único candidato real es <em>extraer + conciliar</em> en paralelo sobre muchas facturas. Se evalúa después
+    de que el agente simple funcione, no antes.</p>
+    <div class="src">Fuente: recomendación 12 — quédate single-agent hasta poder señalar una fase concreta.</div>
+  </div>
+</details>
+
+<details>
+  <summary><span class="tag t-x">D7</span> Extensibilidad — skills, no código</summary>
+  <div class="body">
+    <p>Toda capacidad nueva entra como <strong>skill</strong> (procedimiento en <code>SKILL.md</code> + scripts), no como código
+    nuevo en el loop. Es lo que el curso enseña y lo que mantiene el core mínimo.</p>
+    <table>
+      <tr><th>Skill</th><th>Qué resuelve</th></tr>
+      <tr><td><code>mast-protocolo</code></td><td>Los flujos de OT/OB/OC, estados de pago, rendiciones y plazos del BTPR</td></tr>
+      <tr><td><code>mast-conciliacion</code></td><td>Cruzar Kame vs Excel y clasificar discrepancias</td></tr>
+      <tr><td><code>mast-master-excel</code></td><td>Cómo leer el Excel sin romper fórmulas ni sumar eliminados</td></tr>
+      <tr><td><code>deterministic-data-extraction</code></td><td>Regla de oro: Python extrae, el LLM no inventa (ya existe)</td></tr>
+      <tr><td><code>rag-architecture</code></td><td>Diseño de los stores por dominio (ya existe)</td></tr>
+    </table>
+  </div>
+</details>
+
+<h2>4 · Las dos ausencias — acá sí importa</h2>
+<div class="grid g2">
+  <div class="card">
+    <h3 style="margin-top:0">Sin framework de agente</h3>
+    <p style="font-size:13.5px">0 de 12 harnesses de producción usan LangChain, CrewAI o AutoGen. El loop se escribe a mano.
+    Para un agente que toca cifras contables, la razón no es de moda: cuando falla, hay que poder leer <em>exactamente</em>
+    qué pasó en el prompt.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Sin RAG sobre el Excel</h3>
+    <p style="font-size:13.5px">El Excel y Kame <strong>no se embeben</strong>. Se consultan. Un vector sobre fórmulas nace
+    desactualizado y no da un número, da una similitud. RAG solo donde el documento <em>es</em> la fuente: protocolo y leyes.</p>
+  </div>
+</div>
+
+<h2>5 · Arquitectura del RAG — 4 dominios, ningún índice colapsado</h2>
+<p class="sub">Si se mezcla todo en un solo índice, los vectores se agrupan por tipo de documento y la recuperación se sesga. Un store por dominio, con una capa que rutea.</p>
+
+<table>
+  <tr><th>Dominio</th><th>Contenido</th><th>Qué pregunta responde</th><th>Capa</th></tr>
+  <tr>
+    <td><span class="tag t-x">A</span> Norma MAST</td>
+    <td>BTPR 009-011 completo, reglas de <code>Parámetros</code>, definiciones del protocolo</td>
+    <td>"¿Cuánto es el anticipo de arranque?" · "¿Quién aprueba una OC?"</td>
+    <td>Vectorial</td>
+  </tr>
+  <tr>
+    <td><span class="tag t-x">B</span> Kame / ERP</td>
+    <td>Módulos, campos, significado de OT vs OC vs OB, forma de los documentos</td>
+    <td>"¿Qué significa el estado Factorizada en Kame?"</td>
+    <td>Vectorial</td>
+  </tr>
+  <tr>
+    <td><span class="tag t-d">C</span> Ley chilena</td>
+    <td>Código del Trabajo, Ley 20.123, DS 44, Ley 21.595, DL 825, DL 824, Ley 21.133</td>
+    <td>"¿Qué artículo obliga a la rendición mensual?"</td>
+    <td>Vectorial + cita obligatoria</td>
+  </tr>
+  <tr>
+    <td><span class="tag t-s">D</span> Capa determinista</td>
+    <td><strong>Lookup, no embedding:</strong> IVA 19%, retención honorarios 15,25% (2026), PPM, plazos F29, UF/UTM</td>
+    <td>"¿Cuánto es el IVA?" → respuesta exacta, no aproximada</td>
+    <td>JSON con fuente y vigencia</td>
+  </tr>
+</table>
+
+<div class="bad"><strong>Por qué el dominio D va aparte y por consulta:</strong> una tasa mal recuperada cuesta plata.
+El IVA no se pregunta al índice vectorial — se consulta por clave. Ya existe la base:
+<code>Electivo-IA-Conta/datos_estructurados.json</code>, con URL de fuente, vigencia desde/hasta y fecha de consulta en cada valor.
+<strong>Se reutiliza, no se rehace.</strong></div>
+
+<div class="flow" style="margin-top:18px">
+  <span class="box">pregunta</span><span class="arrow">→</span>
+  <span class="box alt">router: ¿es cifra o es texto?</span><span class="arrow">→</span>
+  <span class="box">D lookup</span><span class="arrow">+</span>
+  <span class="box">A / B / C vectorial</span><span class="arrow">→</span>
+  <span class="box alt">respuesta con cita</span><span class="arrow">|</span>
+  <span class="box stop">"no está en el corpus"</span>
+</div>
+
+<h2>6 · Plan de trabajo — 5 fases, cada una verificable</h2>
+
+<table>
+  <tr><th>#</th><th>Fase</th><th>Entregable real</th><th>Verificación</th></tr>
+  <tr><td>0</td><td><strong>Corpus y reglas</strong></td><td>Protocolo en texto + reglas extraídas a JSON + campos del Excel documentados</td><td>Cada regla apunta a su página del PDF o su celda</td></tr>
+  <tr><td>1</td><td><strong>RAG de 4 dominios</strong></td><td>Stores A/B/C indexados + D por lookup</td><td>10 preguntas con respuesta esperada; recall ≥ 0,75</td></tr>
+  <tr><td>2</td><td><strong>Bucle mínimo</strong></td><td><code>while</code> + 6 herramientas + paradas duras (~100 líneas)</td><td>Corre y para solo en el paso 15</td></tr>
+  <tr><td>3</td><td><strong>Conciliación</strong></td><td>Kame vs Excel, discrepancias clasificadas</td><td>Encuentra las 26 filas Eliminado y los 3 ratios 1,19 de exentas</td></tr>
+  <tr><td>4</td><td><strong>Guardrails + eval</strong></td><td>Schema de validación + batería adversarial</td><td>Rechaza la transacción que no cuadra y dice qué regla la frenó</td></tr>
+</table>
+
+<div class="ok"><strong>El testeo que importa</strong> (y que el curso exige): pedirle al agente un artículo que no existe,
+o un monto que no está en ninguna fuente. Debe decir <em>"no está"</em> — no inventar el "Artículo 999" ni un monto plausible.
+Ese es el examen final, no que responda bonito.</div>
+
+<h2>7 · Lo que NO se va a construir (y por qué)</h2>
+<table>
+  <tr><th>Anti-patrón</th><th>Razón</th></tr>
+  <tr><td>LangChain / CrewAI / LangGraph</td><td>0 de 12 harnesses de producción los usan. La debuggabilidad del prompt vale más que la abstracción.</td></tr>
+  <tr><td>Índice vectorial del Excel o de Kame</td><td>Nacen desactualizados. Se consulta la fuente, no una copia embebida.</td></tr>
+  <tr><td>Herramienta que escribe en Kame</td><td>Efecto externo irreversible. El agente propone; un humano firma.</td></tr>
+  <tr><td>Swarm multi-agente</td><td>~15× más tokens sin una fase que lo justifique todavía.</td></tr>
+</table>
+
+<h2>8 · Preguntas abiertas — requieren decisión, no inferencia</h2>
+<div class="warn">
+  <ul style="margin-left:18px">
+    <li><strong>¿Cuál tarea de José se automatiza primero?</strong> El plan propone conciliación Kame vs Excel porque ataca
+    directamente el doble origen de datos. Pero puede ser otra.</li>
+    <li><strong>¿Existe acceso a Kame por API o solo exportación?</strong> Esto define si el puente es en vivo o por archivo.
+    Sin esto, la fase 3 no arranca.</li>
+    <li><strong>¿El anticipo es 30% o el 40% del Excel?</strong> El protocolo dice 30%; el Excel mezcla. Es una regla de negocio:
+    la decide José, no el agente.</li>
+  </ul>
+</div>
+
+<p class="src" style="margin-top:40px">Fuentes: BTPR 009-011 v01 (01-08-2026, 19 págs) · MASTER - Venta-Sub-GM_Flujos.xlsx
+(7 hojas, 5.600+ fórmulas) · Harness Engineering, arXiv 2609.00006v1 · Plan de clases Electivo IV FAE USACH 2S-2026 ·
+datos_estructurados.json (capa determinista con fuente y vigencia).</p>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Datos internos de MAST: nunca subir al repo público.
+# El repositorio es público porque publica GitHub Pages. Los datos del cliente, no.
+rag/02-reglas-mast.json
+rag/01-manifiesto-corpus.json
+rag/03-spec-agente.md
+*.xlsx
+*.xls
+*.pdf
+*.csv
+datos/
+corpus/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
