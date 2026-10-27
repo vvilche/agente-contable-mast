@@ -3,6 +3,13 @@
 rag/02-reglas-mast.json
 rag/01-manifiesto-corpus.json
 rag/03-spec-agente.md
+rag/04-evaluacion-linea-base.json
+rag/hallazgos-validador.json
+# master prompt de Copilot: tiene cifras financieras de MAST
+rag/08-master-prompt-copilot.md
+# tableros con montos, RUT y clientes reales: NUNCA al repo público
+rag/tablero-pagos-mast.html
+rag/consultor-subcontratos.html
 *.xlsx
 *.xls
 *.pdf
