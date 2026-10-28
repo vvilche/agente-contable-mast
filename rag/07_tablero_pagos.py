@@ -239,7 +239,9 @@ def cruzar(prov_filas, ventas):
             "egreso_eliminado": round(eg_elim),
             "facturado_neto": round(fac_neto),
             "facturado_bruto": round(fac_bruto),
-            "margen_bruto": round(fac_neto - eg_bruto),
+            # Sin facturas NO hay margen: mostrar -egreso haria creer que el proyecto
+            # perdio todo, cuando en realidad falta el cruce por nombre. None = no calculable.
+            "margen_bruto": round(fac_neto - eg_bruto) if (pagos and fac) else None,
             "hitos": [{"hito": h, "n": n, "monto": round(sum(x["neto"] or 0 for x in fac_ok if x["hito"] == h))}
                       for h, n in hitos.most_common()],
             "sin_facturar": len(sin_facturar),
@@ -492,7 +494,7 @@ function pintarProy(q){
       <td class="num">${p.egreso_pagado?MON(p.egreso_pagado):"—"}</td>
       <td class="num ${p.egreso_pendiente>0?'neg':''}">${p.egreso_pendiente?MON(p.egreso_pendiente):"—"}</td>
       <td class="num">${p.facturado_neto?MON(p.facturado_neto):"—"}</td>
-      <td class="num ${p.margen_bruto<0?'neg':p.margen_bruto>0?'pos':''}">${p.cruza?MON(p.margen_bruto):"—"}</td>
+      <td class="num ${p.margen_bruto<0?'neg':p.margen_bruto>0?'pos':''}">${p.margen_bruto==null?"<span class='tag t-x'>sin base</span>":MON(p.margen_bruto)}</td>
       <td>${p.cruza?"<span class='tag t-ok'>cruza</span>":
             (p.n_pagos&&!p.n_facturas?"<span class='tag t-b'>sin factura</span>":
             (p.n_facturas&&!p.n_pagos?"<span class='tag t-v'>solo venta</span>":"<span class='tag t-x'>—</span>"))}</td>
